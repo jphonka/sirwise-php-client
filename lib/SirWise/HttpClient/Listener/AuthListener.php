@@ -35,7 +35,7 @@ class AuthListener
                 break;
 
             case Client::AUTH_HTTP_TOKEN:
-                $event['request']->setHeader('Authorization', sprintf('token %s', $this->tokenOrLogin));
+                $event['request']->setHeader('Authorization', sprintf('Bearer %s', $this->tokenOrLogin));
                 break;
 
             case Client::AUTH_URL_CLIENT_ID:

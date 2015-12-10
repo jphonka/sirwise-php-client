@@ -21,18 +21,22 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 class HttpClient implements HttpClientInterface
 {
     protected $options = array(
-        'base_url'    => 'https://api.sirwise.com/',
+        'base_url'      => 'https://api.sirwise.com/',
 
-        'user_agent'  => 'php-sirwise-api (http://sirwise.com/KnpLabs/php-sirwise-api)',
-        'timeout'     => 10,
+        'user_agent'    => 'php-sirwise-api (http://sirwise.com/voltio/php-sirwise-api)',
+        'timeout'       => 10,
 
-        'api_limit'   => 5000,
-        'api_version' => 'v3',
+        'api_limit'     => 5000,
+        'api_version'   => 'v1',
+        'realm'         => 'tenant',
+        'tenant'        => '',
 
-        'cache_dir'   => null
+        'cache_dir'     => null,
+        'content_type'  => 'application/json'
     );
 
     protected $headers = array();
+    protected $authListener;
 
     private $lastResponse;
     private $lastRequest;
@@ -44,7 +48,10 @@ class HttpClient implements HttpClientInterface
     public function __construct(array $options = array(), ClientInterface $client = null)
     {
         $this->options = array_merge($this->options, $options);
-        $client = $client ?: new GuzzleClient($this->options['base_url'], $this->options);
+
+        $base_url = $this->options['base_url'] . '/' . $this->options['api_version'];
+
+        $client = $client ?: new GuzzleClient($base_url, $this->options);
         $this->client  = $client;
 
         $this->addListener('request.error', array(new ErrorListener($this->options), 'onRequestError'));
@@ -73,8 +80,10 @@ class HttpClient implements HttpClientInterface
     public function clearHeaders()
     {
         $this->headers = array(
-            'Accept' => sprintf('application/vnd.sirwise.%s+json', $this->options['api_version']),
+            'Accept' => $this->options['content_type'],
             'User-Agent' => sprintf('%s', $this->options['user_agent']),
+            'Realm' => sprintf('%s', $this->options['realm']),
+            'Tenant' => sprintf('%s', $this->options['tenant']),
         );
     }
 
@@ -156,8 +165,12 @@ class HttpClient implements HttpClientInterface
      */
     public function authenticate($tokenOrLogin, $password = null, $method)
     {
+        if ($this->authListener) {
+            $this->client->getEventDispatcher()->removeListener('request.before_send', $this->authListener);
+        }
+        $this->authListener = new AuthListener($tokenOrLogin, $password, $method);
         $this->addListener('request.before_send', array(
-            new AuthListener($tokenOrLogin, $password, $method), 'onRequestBeforeSend'
+            $this->authListener, 'onRequestBeforeSend'
         ));
     }
 

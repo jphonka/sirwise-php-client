@@ -7,10 +7,10 @@ use SirWise\Exception\ApiLimitExceedException;
 
 class ResponseMediator
 {
-    public static function getContent(Response $response)
+    public static function getContent(Response $response, $assoc = true)
     {
         $body    = $response->getBody(true);
-        $content = json_decode($body, true);
+        $content = json_decode($body, $assoc);
 
         if (JSON_ERROR_NONE !== json_last_error()) {
             return $body;
@@ -41,7 +41,7 @@ class ResponseMediator
 
     public static function getApiLimit(Response $response)
     {
-        $remainingCalls = (string) $response->getHeader('X-RateLimit-Remaining');
+        $remainingCalls = (string) $response->getHeader('X-Rate-Limit-Remaining');
 
         if (null !== $remainingCalls && 1 > $remainingCalls) {
             throw new ApiLimitExceedException($remainingCalls);

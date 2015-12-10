@@ -3,6 +3,7 @@
 namespace SirWise;
 
 use SirWise\Api\ApiInterface;
+use SirWise\Api\AbstractApi;
 use SirWise\Exception\InvalidArgumentException;
 use SirWise\Exception\BadMethodCallException;
 use SirWise\HttpClient\HttpClient;
@@ -55,10 +56,13 @@ class Client
         'user_agent'  => 'sirwise-php-client (http://github.com/voltio/sirwise-php-client)',
         'timeout'     => 10,
 
-        'api_limit'   => 5000,
-        'api_version' => 'v1',
+        'api_limit'     => 5000,
+        'api_version'   => 'v1',
+        'realm'         => 'tenant',
+        'tenant'        => '',
 
-        'cache_dir'   => null
+        'cache_dir'     => null,
+        'content_type'  => 'application/json'
     );
 
     /**
@@ -83,7 +87,7 @@ class Client
      *
      * @throws InvalidArgumentException
      *
-     * @return ApiInterface
+     * @return mixed
      */
     public function api($name)
     {
@@ -94,6 +98,13 @@ class Client
                 break;
             case 'users':
                 $api = new Api\User($this);
+                break;
+            case '':
+            case 'system':
+                $api = new Api\System($this);
+                break;
+            case 'tenant':
+                $api = new Api\Tenant($this);
                 break;
             default:
                 throw new InvalidArgumentException(sprintf('Undefined api instance called: "%s"', $name));
@@ -163,6 +174,20 @@ class Client
     public function setHeaders(array $headers)
     {
         $this->getHttpClient()->setHeaders($headers);
+    }
+
+    /**
+     * @param string $name
+     */
+    public function setTenant($name)
+    {
+        if ($name) {
+            if (is_string($name)) {
+                $this->getHttpClient()->setHeaders(['Tenant' => $name]);
+                return $this;
+            }
+            throw new InvalidArgumentException(sprintf('Invalid tenant name: "%s"', $name));
+        }
     }
 
     /**

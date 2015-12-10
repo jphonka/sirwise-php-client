@@ -76,7 +76,7 @@ abstract class AbstractApi implements ApiInterface
         }
         $response = $this->client->getHttpClient()->get($path, $parameters, $requestHeaders);
 
-        return ResponseMediator::getContent($response);
+        return ResponseMediator::getContent($response, false);
     }
 
     /**
@@ -135,7 +135,7 @@ abstract class AbstractApi implements ApiInterface
             $requestHeaders
         );
 
-        return ResponseMediator::getContent($response);
+        return ResponseMediator::getContent($response, false);
     }
 
     /**
@@ -154,7 +154,7 @@ abstract class AbstractApi implements ApiInterface
             $requestHeaders
         );
 
-        return ResponseMediator::getContent($response);
+        return ResponseMediator::getContent($response, false);
     }
 
     /**
@@ -173,7 +173,7 @@ abstract class AbstractApi implements ApiInterface
             $requestHeaders
         );
 
-        return ResponseMediator::getContent($response);
+        return ResponseMediator::getContent($response, false);
     }
 
     /**
@@ -192,7 +192,7 @@ abstract class AbstractApi implements ApiInterface
             $requestHeaders
         );
 
-        return ResponseMediator::getContent($response);
+        return ResponseMediator::getContent($response, false);
     }
 
     /**

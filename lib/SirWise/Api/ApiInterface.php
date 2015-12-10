@@ -10,6 +10,5 @@ namespace SirWise\Api;
 interface ApiInterface
 {
     public function getPerPage();
-
     public function setPerPage($perPage);
 }
