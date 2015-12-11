@@ -2,7 +2,6 @@
 
 namespace SirWise\HttpClient;
 
-use SirWise\Exception\TwoFactorAuthenticationRequiredException;
 use Guzzle\Http\Client as GuzzleClient;
 use Guzzle\Http\ClientInterface;
 use Guzzle\Http\Message\Request;
@@ -37,6 +36,7 @@ class HttpClient implements HttpClientInterface
 
     protected $headers = array();
     protected $authListener;
+    protected $callback;
 
     private $lastResponse;
     private $lastRequest;
@@ -82,8 +82,6 @@ class HttpClient implements HttpClientInterface
         $this->headers = array(
             'Accept' => $this->options['content_type'],
             'User-Agent' => sprintf('%s', $this->options['user_agent']),
-            'Realm' => sprintf('%s', $this->options['realm']),
-            'Tenant' => sprintf('%s', $this->options['tenant']),
         );
     }
 
@@ -148,8 +146,6 @@ class HttpClient implements HttpClientInterface
             $response = $this->client->send($request);
         } catch (\LogicException $e) {
             throw new ErrorException($e->getMessage(), $e->getCode(), $e);
-        } catch (TwoFactorAuthenticationRequiredException $e) {
-            throw $e;
         } catch (\RuntimeException $e) {
             throw new RuntimeException($e->getMessage(), $e->getCode(), $e);
         }
@@ -163,7 +159,7 @@ class HttpClient implements HttpClientInterface
     /**
      * {@inheritDoc}
      */
-    public function authenticate($tokenOrLogin, $password = null, $method)
+    public function authenticate($tokenOrLogin, $password = null, $method, callable $callback = null)
     {
         if ($this->authListener) {
             $this->client->getEventDispatcher()->removeListener('request.before_send', $this->authListener);
@@ -172,6 +168,7 @@ class HttpClient implements HttpClientInterface
         $this->addListener('request.before_send', array(
             $this->authListener, 'onRequestBeforeSend'
         ));
+        $this->callback = $callback;
     }
 
     /**

@@ -21,6 +21,16 @@ class System extends AbstractApi
         ));
     }
 
+    public function refreshToken($client_id, $client_secret, $refreshToken)
+    {
+        return $this->post('token', array(
+            'client_id' => $client_id,
+            'client_secret' => $client_secret,
+            'refresh_token' => $refreshToken,
+            'grant_type' => 'refresh_token'
+        ));
+    }
+
     public function confirmEmail($token)
     {
         return $this->post('confirm', array('token'=>$token));

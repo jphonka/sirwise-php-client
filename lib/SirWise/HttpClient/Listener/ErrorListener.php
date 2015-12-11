@@ -2,6 +2,7 @@
 
 namespace SirWise\HttpClient\Listener;
 
+use SirWise\Exception\TokenExpiredException;
 use SirWise\Exception\TwoFactorAuthenticationRequiredException;
 use SirWise\HttpClient\Message\ResponseMediator;
 use Guzzle\Common\Event;
@@ -38,60 +39,14 @@ class ErrorListener
         $response = $request->getResponse();
 
         if ($response->isClientError() || $response->isServerError()) {
-            $remaining = (string) $response->getHeader('X-RateLimit-Remaining');
-            $limit = $response->getHeader('X-RateLimit-Limit');
+            $remaining = (string) $response->getHeader('X-Rate-Limit-Remaining');
+            $limit = $response->getHeader('X-Rate-Limit-Limit');
 
             if (null != $remaining && 1 > $remaining && 'rate_limit' !== substr($request->getResource(), 1, 10)) {
                 throw new ApiLimitExceedException($limit);
             }
 
-            if (401 === $response->getStatusCode()) {
-                if ($response->hasHeader('X-GitHub-OTP') && 0 === strpos((string) $response->getHeader('X-GitHub-OTP'), 'required;')) {
-                    $type = substr((string) $response->getHeader('X-GitHub-OTP'), 9);
-
-                    throw new TwoFactorAuthenticationRequiredException($type);
-                }
-            }
-
             $content = ResponseMediator::getContent($response);
-            if (is_array($content) && isset($content['message'])) {
-                if (400 == $response->getStatusCode()) {
-                    throw new ErrorException($content['message'], 400);
-                } elseif (422 == $response->getStatusCode() && isset($content['errors'])) {
-                    $errors = array();
-                    foreach ($content['errors'] as $error) {
-                        switch ($error['code']) {
-                            case 'missing':
-                                $errors[] = sprintf('The %s %s does not exist, for resource "%s"', $error['field'], $error['value'], $error['resource']);
-                                break;
-
-                            case 'missing_field':
-                                $errors[] = sprintf('Field "%s" is missing, for resource "%s"', $error['field'], $error['resource']);
-                                break;
-
-                            case 'invalid':
-                                if (isset($error['message'])) {
-                                    $errors[] = sprintf('Field "%s" is invalid, for resource "%s": "%s"', $error['field'], $error['resource'], $error['message']);
-                                } else {
-                                    $errors[] = sprintf('Field "%s" is invalid, for resource "%s"', $error['field'], $error['resource']);
-                                }
-                                break;
-
-                            case 'already_exists':
-                                $errors[] = sprintf('Field "%s" already exists, for resource "%s"', $error['field'], $error['resource']);
-                                break;
-
-                            default:
-                                $errors[] = $error['message'];
-                                break;
-
-                        }
-                    }
-
-                    throw new ValidationFailedException('Validation Failed: ' . implode(', ', $errors), 422);
-                }
-            }
-
             throw new RuntimeException(isset($content['message']) ? $content['message'] : $content, $response->getStatusCode());
         };
     }

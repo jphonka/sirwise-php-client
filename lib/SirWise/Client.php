@@ -58,8 +58,6 @@ class Client
 
         'api_limit'     => 5000,
         'api_version'   => 'v1',
-        'realm'         => 'tenant',
-        'tenant'        => '',
 
         'cache_dir'     => null,
         'content_type'  => 'application/json'
@@ -178,15 +176,29 @@ class Client
 
     /**
      * @param string $name
+     * @return $this
      */
     public function setTenant($name)
     {
-        if ($name) {
-            if (is_string($name)) {
-                $this->getHttpClient()->setHeaders(['Tenant' => $name]);
+        if (is_string($name) || is_null($name)) {
+            $this->getHttpClient()->setHeaders(['Tenant' => $name]);
+            return $this;
+        }
+        throw new InvalidArgumentException(sprintf('Invalid tenant name: "%s"', $name));
+    }
+
+    /**
+     * @param string $realm
+     * @return $this
+     */
+    public function setRealm($realm)
+    {
+        if ($realm) {
+            if (is_string($realm)) {
+                $this->getHttpClient()->setHeaders(['Realm' => $realm]);
                 return $this;
             }
-            throw new InvalidArgumentException(sprintf('Invalid tenant name: "%s"', $name));
+            throw new InvalidArgumentException(sprintf('Invalid realm: "%s"', $realm));
         }
     }
 
