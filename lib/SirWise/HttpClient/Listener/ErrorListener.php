@@ -47,7 +47,7 @@ class ErrorListener
             }
 
             $content = ResponseMediator::getContent($response);
-            throw new RuntimeException(isset($content['message']) ? $content['message'] : $content, $response->getStatusCode());
+            throw new RuntimeException($content, $response->getStatusCode());
         };
     }
 }

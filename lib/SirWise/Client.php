@@ -8,6 +8,7 @@ use SirWise\Exception\InvalidArgumentException;
 use SirWise\Exception\BadMethodCallException;
 use SirWise\HttpClient\HttpClient;
 use SirWise\HttpClient\HttpClientInterface;
+use SirWise\Oauth2\GrantType\GrantTypeInterface;
 
 /**
  * Simple PHP SirWise client.
@@ -113,29 +114,12 @@ class Client
 
     /**
      * Authenticate a user for all next requests.
-     *
-     * @param string      $tokenOrLogin SirWise private token/username/client ID
-     * @param null|string $password     SirWise password/secret (optionally can contain $authMethod)
-     * @param null|string $authMethod   One of the AUTH_* class constants
-     *
-     * @throws InvalidArgumentException If no authentication method was given
+     * @param GrantTypeInterface $grantType
+     * @param GrantTypeInterface $refreshTokenGrantType
      */
-    public function authenticate($tokenOrLogin, $password = null, $authMethod = null)
+    public function authenticate(GrantTypeInterface $grantType = null, GrantTypeInterface $refreshTokenGrantType = null)
     {
-        if (null === $password && null === $authMethod) {
-            throw new InvalidArgumentException('You need to specify authentication method!');
-        }
-
-        if (null === $authMethod && in_array($password, array(self::AUTH_URL_TOKEN, self::AUTH_URL_CLIENT_ID, self::AUTH_HTTP_PASSWORD, self::AUTH_HTTP_TOKEN))) {
-            $authMethod = $password;
-            $password   = null;
-        }
-
-        if (null === $authMethod) {
-            $authMethod = self::AUTH_HTTP_PASSWORD;
-        }
-
-        $this->getHttpClient()->authenticate($tokenOrLogin, $password, $authMethod);
+        $this->getHttpClient()->authenticate($grantType, $refreshTokenGrantType);
     }
 
     /**

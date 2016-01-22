@@ -8,9 +8,11 @@ use Guzzle\Http\Message\Request;
 use Guzzle\Http\Message\Response;
 use SirWise\Exception\ErrorException;
 use SirWise\Exception\RuntimeException;
+use SirWise\Exception\TokenExpiredException;
 use SirWise\HttpClient\Listener\AuthListener;
 use SirWise\HttpClient\Listener\ErrorListener;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use SirWise\Oauth2\GrantType\GrantTypeInterface;
 
 /**
  * Performs requests on SirWise API. API documentation should be self-explanatory.
@@ -85,9 +87,9 @@ class HttpClient implements HttpClientInterface
         );
     }
 
-    public function addListener($eventName, $listener)
+    public function addListener($eventName, $listener, $priority = 0)
     {
-        $this->client->getEventDispatcher()->addListener($eventName, $listener);
+        $this->client->getEventDispatcher()->addListener($eventName, $listener, $priority);
     }
 
     public function addSubscriber(EventSubscriberInterface $subscriber)
@@ -147,6 +149,9 @@ class HttpClient implements HttpClientInterface
         } catch (\LogicException $e) {
             throw new ErrorException($e->getMessage(), $e->getCode(), $e);
         } catch (\RuntimeException $e) {
+            if ($e->getCode() === 'E4017') {
+                throw new TokenExpiredException($e->getMessage(), $e->getCode(), $e);
+            }
             throw new RuntimeException($e->getMessage(), $e->getCode(), $e);
         }
 
@@ -159,16 +164,23 @@ class HttpClient implements HttpClientInterface
     /**
      * {@inheritDoc}
      */
-    public function authenticate($tokenOrLogin, $password = null, $method, callable $callback = null)
+    public function authenticate(GrantTypeInterface $grantType = null, GrantTypeInterface $refreshTokenGrantType = null)
     {
+        /*
         if ($this->authListener) {
             $this->client->getEventDispatcher()->removeListener('request.before_send', $this->authListener);
         }
-        $this->authListener = new AuthListener($tokenOrLogin, $password, $method);
+        */
+
+        $this->authListener = new AuthListener($grantType, $refreshTokenGrantType);
+
         $this->addListener('request.before_send', array(
             $this->authListener, 'onRequestBeforeSend'
         ));
-        $this->callback = $callback;
+
+        $this->addListener('request.error', array(
+            $this->authListener, 'onRequestError'
+        ), 1);
     }
 
     /**

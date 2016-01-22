@@ -4,6 +4,7 @@ namespace SirWise\HttpClient;
 
 use SirWise\Exception\InvalidArgumentException;
 use Guzzle\Http\Message\Response;
+use SirWise\Oauth2\GrantType\GrantTypeInterface;
 
 /**
  * Performs requests on SirWise API. API documentation should be self-explanatory.
@@ -101,12 +102,9 @@ interface HttpClientInterface
 
     /**
      * Authenticate a user for all next requests.
-     *
-     * @param string      $tokenOrLogin GitHub private token/username/client ID
-     * @param null|string $password     GitHub password/secret (optionally can contain $authMethod)
-     * @param null|string $authMethod   One of the AUTH_* class constants
-     *
-     * @throws InvalidArgumentException If no authentication method was given
+     * @param GrantTypeInterface $grantType
+     * @param GrantTypeInterface $refreshTokenGrantType
+     * @return
      */
-    public function authenticate($tokenOrLogin, $password, $authMethod);
+    public function authenticate(GrantTypeInterface $grantType = null, GrantTypeInterface $refreshTokenGrantType = null);
 }
