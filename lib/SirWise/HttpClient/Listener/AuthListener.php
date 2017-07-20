@@ -67,7 +67,6 @@ class AuthListener
         if (!$accessToken && $this->grantType) {
             // Get a new access token.
             $accessToken = $this->grantType->getToken();
-
         }
         return $accessToken ?: null;
     }

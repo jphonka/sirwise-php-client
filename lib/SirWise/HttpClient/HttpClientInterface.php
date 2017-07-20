@@ -17,7 +17,7 @@ interface HttpClientInterface
      * Send a GET request.
      *
      * @param string $path       Request path
-     * @param array  $parameters GET Parameters
+     * @param array  $parameters Query parameters
      * @param array  $headers    Reconfigure the request headers for this call only
      *
      * @return Response
@@ -29,35 +29,38 @@ interface HttpClientInterface
      *
      * @param string $path    Request path
      * @param mixed  $body    Request body
+     * @param array  $parameters Query parameters
      * @param array  $headers Reconfigure the request headers for this call only
      *
      * @return Response
      */
-    public function post($path, $body = null, array $headers = array());
+    public function post($path, $body = null, array $parameters = array(), array $headers = array());
 
     /**
      * Send a PATCH request.
      *
      * @param string $path    Request path
      * @param mixed  $body    Request body
+     * @param array  $parameters Query parameters
      * @param array  $headers Reconfigure the request headers for this call only
      *
      * @internal param array $parameters Request body
      *
      * @return Response
      */
-    public function patch($path, $body = null, array $headers = array());
+    public function patch($path, $body = null, array $parameters = array(), array $headers = array());
 
     /**
      * Send a PUT request.
      *
      * @param string $path    Request path
      * @param mixed  $body    Request body
+     * @param array  $parameters Query parameters
      * @param array  $headers Reconfigure the request headers for this call only
      *
      * @return Response
      */
-    public function put($path, $body, array $headers = array());
+    public function put($path, $body,  array $parameters = array(), array $headers = array());
 
     /**
      * Send a DELETE request.

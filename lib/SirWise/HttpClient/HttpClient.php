@@ -6,6 +6,7 @@ use Guzzle\Http\Client as GuzzleClient;
 use Guzzle\Http\ClientInterface;
 use Guzzle\Http\Message\Request;
 use Guzzle\Http\Message\Response;
+use SirWise\Client;
 use SirWise\Exception\ErrorException;
 use SirWise\Exception\RuntimeException;
 use SirWise\Exception\TokenExpiredException;
@@ -30,7 +31,7 @@ class HttpClient implements HttpClientInterface
         'api_limit'     => 5000,
         'api_version'   => 'v1',
         'realm'         => 'tenant',
-        'tenant'        => '',
+        'tenant'        => 'mcare',
 
         'cache_dir'     => null,
         'content_type'  => 'application/json'
@@ -42,6 +43,9 @@ class HttpClient implements HttpClientInterface
 
     private $lastResponse;
     private $lastRequest;
+
+    /** @var Client $baseClient */
+    private $baseClient = null;
 
     /**
      * @param array           $options
@@ -108,17 +112,17 @@ class HttpClient implements HttpClientInterface
     /**
      * {@inheritDoc}
      */
-    public function post($path, $body = null, array $headers = array())
+    public function post($path, $body = null,  array $headers = array(), array $parameters = array())
     {
-        return $this->request($path, $body, 'POST', $headers);
+        return $this->request($path, $body, 'POST', $headers, array('query' => $parameters));
     }
 
     /**
      * {@inheritDoc}
      */
-    public function patch($path, $body = null, array $headers = array())
+    public function patch($path, $body = null, array $headers = array(), array $parameters = array())
     {
-        return $this->request($path, $body, 'PATCH', $headers);
+        return $this->request($path, $body, 'PATCH', $headers, array('query' => $parameters));
     }
 
     /**
@@ -132,9 +136,9 @@ class HttpClient implements HttpClientInterface
     /**
      * {@inheritDoc}
      */
-    public function put($path, $body, array $headers = array())
+    public function put($path, $body, array $headers = array(), array $params = array())
     {
-        return $this->request($path, $body, 'PUT', $headers);
+        return $this->request($path, $body, 'PUT', $headers, array('query' => $params));
     }
 
     /**
@@ -164,13 +168,17 @@ class HttpClient implements HttpClientInterface
     /**
      * {@inheritDoc}
      */
-    public function authenticate(GrantTypeInterface $grantType = null, GrantTypeInterface $refreshTokenGrantType = null)
+    public function authenticate(GrantTypeInterface $grantType = null, GrantTypeInterface $refreshTokenGrantType = null, Client $baseClient = null)
     {
         /*
         if ($this->authListener) {
             $this->client->getEventDispatcher()->removeListener('request.before_send', $this->authListener);
         }
         */
+
+        if ($baseClient) {
+            $this->baseClient = $baseClient;
+        }
 
         $this->authListener = new AuthListener($grantType, $refreshTokenGrantType);
 

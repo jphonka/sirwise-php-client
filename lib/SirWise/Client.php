@@ -71,6 +71,8 @@ class Client
      */
     private $httpClient;
 
+    public $tenant;
+
     /**
      * Instantiate a new SirWise client.
      *
@@ -86,7 +88,7 @@ class Client
      *
      * @throws InvalidArgumentException
      *
-     * @return mixed
+     * @return AbstractApi
      */
     public function api($name)
     {
@@ -105,6 +107,9 @@ class Client
             case 'tenant':
                 $api = new Api\Tenant($this);
                 break;
+            case 'order':
+                $api = new Api\Order($this);
+                break;
             default:
                 throw new InvalidArgumentException(sprintf('Undefined api instance called: "%s"', $name));
         }
@@ -119,7 +124,7 @@ class Client
      */
     public function authenticate(GrantTypeInterface $grantType = null, GrantTypeInterface $refreshTokenGrantType = null)
     {
-        $this->getHttpClient()->authenticate($grantType, $refreshTokenGrantType);
+        $this->getHttpClient()->authenticate($grantType, $refreshTokenGrantType, $this);
     }
 
     /**
@@ -166,6 +171,7 @@ class Client
     {
         if (is_string($name) || is_null($name)) {
             $this->getHttpClient()->setHeaders(['Tenant' => $name]);
+            $this->tenant = $name;
             return $this;
         }
         throw new InvalidArgumentException(sprintf('Invalid tenant name: "%s"', $name));

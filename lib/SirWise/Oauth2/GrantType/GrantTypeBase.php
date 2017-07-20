@@ -39,6 +39,7 @@ abstract class GrantTypeBase implements GrantTypeInterface
             'scope' => '',
             'token_url' => 'token',
             'auth_location' => 'headers',
+            'tenant' => 'mcare'
         ];
     }
 
@@ -70,14 +71,15 @@ abstract class GrantTypeBase implements GrantTypeInterface
         $config = $this->config->toArray();
 
         $body = $config;
-        $body['grant_type'] = $this->grantType;
-        unset($body['token_url'], $body['auth_location']);
+        $body['grantType'] = $this->grantType;
+        unset($body['token_url'], $body['auth_location'], $body['tenant']);
+
 
         $requestOptions = [];
 
         if ($config['auth_location'] !== 'body') {
             $requestOptions['auth'] = [$config['client_id'], $config['client_secret']];
-            unset($body['client_id'], $body['client_secret']);
+            unset($body['client_secret']);
         }
 
         $requestOptions['body'] = $body;
@@ -87,15 +89,33 @@ abstract class GrantTypeBase implements GrantTypeInterface
         }
 
         $parameters = $requestOptions['body'];
+        $parameters["clientId"] = $config["client_id"];
+
         $request = $this->client->post(
             $config['token_url'],
             $requestOptions,
             (count($parameters) === 0) ? null : json_encode($parameters, empty($parameters) ? JSON_FORCE_OBJECT : 0)
         );
+        if (isset($config['tenant']))  {
+            $request->setHeader('Tenant', $config['tenant']);
+        }
+
         $request->setAuth($this->config['client_id'], $this->config['client_secret']);
+        $request->setHeader('accept', 'application/json');
+
+        print_r([
+           $request->getUrl(),
+           $request->getPort(),
+           $request->getHost(),
+           $request->getPath(),
+           $request->getMethod()
+        ]);
+
         $response = $request->send();
+
         $data = $response->json();
 
-        return new AccessToken($data['access_token'], $data['token_type'], $data);
+        $token = new AccessToken($data['accessToken'], $data['tokenType'], $data);
+        return $token;
     }
 }
