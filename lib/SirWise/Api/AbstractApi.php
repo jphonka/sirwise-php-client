@@ -26,6 +26,8 @@ abstract class AbstractApi implements ApiInterface
      */
     protected $perPage;
 
+    protected $query;
+
     /**
      * @param Client $client
      */
@@ -52,17 +54,22 @@ abstract class AbstractApi implements ApiInterface
      */
     public function setPerPage($perPage)
     {
-        $this->perPage = (null === $perPage ? $perPage : (int) $perPage);
+        $this->perPage = (null === $perPage ? $perPage : (int)$perPage);
 
         return $this;
+    }
+
+    public function setQuery($query)
+    {
+
     }
 
     /**
      * Send a GET request with query parameters.
      *
-     * @param string $path           Request path.
-     * @param array  $parameters     GET parameters.
-     * @param array  $requestHeaders Request Headers.
+     * @param string $path Request path.
+     * @param array $parameters GET parameters.
+     * @param array $requestHeaders Request Headers.
      *
      * @return \Guzzle\Http\EntityBodyInterface|mixed|string
      */
@@ -82,9 +89,9 @@ abstract class AbstractApi implements ApiInterface
     /**
      * Send a HEAD request with query parameters.
      *
-     * @param string $path           Request path.
-     * @param array  $parameters     HEAD parameters.
-     * @param array  $requestHeaders Request headers.
+     * @param string $path Request path.
+     * @param array $parameters HEAD parameters.
+     * @param array $requestHeaders Request headers.
      *
      * @return \Guzzle\Http\Message\Response
      */
@@ -105,17 +112,15 @@ abstract class AbstractApi implements ApiInterface
      * Send a POST request with JSON-encoded parameters.
      *
      * @param string $path Request path.
-     * @param array $parameters POST parameters to be JSON encoded.
+     * @param array $body POST body to be JSON encoded.
+     * @param array $params Query parameters
      * @param array $requestHeaders Request headers.
      * @return \Guzzle\Http\EntityBodyInterface|mixed|string
      */
-    protected function post($path, array $parameters = array(), $requestHeaders = array())
+    protected function post($path, array $body = array(), array $params = array(), $requestHeaders = array())
     {
-        return $this->postRaw(
-            $path,
-            $this->createJsonBody($parameters),
-            $requestHeaders
-        );
+        $response = $this->client->getHttpClient()->post($path, $this->createJsonBody($body), $params, $requestHeaders);
+        return ResponseMediator::getContent($response, false);
     }
 
     /**
@@ -123,7 +128,7 @@ abstract class AbstractApi implements ApiInterface
      *
      * @param string $path Request path.
      * @param string $body Request body.
-     * @param array  $requestHeaders Request headers.
+     * @param array $requestHeaders Request headers.
      *
      * @return \Guzzle\Http\EntityBodyInterface|mixed|string
      */
@@ -142,15 +147,15 @@ abstract class AbstractApi implements ApiInterface
      * Send a PATCH request with JSON-encoded parameters.
      *
      * @param string $path Request path.
-     * @param array $parameters POST parameters to be JSON encoded.
+     * @param array $body POST parameters to be JSON encoded.
      * @param array $requestHeaders Request headers.
      * @return \Guzzle\Http\EntityBodyInterface|mixed|string
      */
-    protected function patch($path, array $parameters = array(), $requestHeaders = array())
+    protected function patch($path,  array $body = array(), $requestHeaders = array())
     {
         $response = $this->client->getHttpClient()->patch(
             $path,
-            $this->createJsonBody($parameters),
+            $this->createJsonBody($body),
             $requestHeaders
         );
 
@@ -161,16 +166,18 @@ abstract class AbstractApi implements ApiInterface
      * Send a PUT request with JSON-encoded parameters.
      *
      * @param string $path Request path.
-     * @param array $parameters POST parameters to be JSON encoded.
+     * @param array $body POST body to be JSON encoded.
      * @param array $requestHeaders Request headers.
+     * @param array $parameters Query parameters
      * @return \Guzzle\Http\EntityBodyInterface|mixed|string
      */
-    protected function put($path, array $parameters = array(), $requestHeaders = array())
+    protected function put($path, array $body = array(), array $parameters = [], $requestHeaders = array())
     {
         $response = $this->client->getHttpClient()->put(
             $path,
-            $this->createJsonBody($parameters),
-            $requestHeaders
+            $this->createJsonBody($body),
+            $requestHeaders,
+            $parameters
         );
 
         return ResponseMediator::getContent($response, false);

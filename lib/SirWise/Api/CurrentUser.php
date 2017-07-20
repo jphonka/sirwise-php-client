@@ -9,6 +9,6 @@ class CurrentUser extends AbstractApi
 {
     public function show()
     {
-        return $this->get('user');
+        return $this->get('self');
     }
 }
